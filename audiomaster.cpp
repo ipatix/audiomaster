@@ -14,6 +14,10 @@
 #define LINE_MAX 1024
 #endif
 
+static constexpr float db2lin(float x) {
+    return std::pow(10.0f, x / 20.0f);
+}
+
 /* LV2 settings */
 const char *plugin_path = "/usr/lib/lv2/calf.lv2/calf.so";
 const char *plugin_bundle = "/usr/lib/lv2/calf.lv2/";
@@ -23,13 +27,13 @@ void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *
     static float dummy_out;
 
     static float bypass = 0.0f;
-    static float level_in = std::clamp(std::pow(10.0f, input_gain / 20.0f), 1.0f / 64.0f, 64.0f);
+    static float level_in = std::clamp(db2lin(input_gain), 1.0f / 64.0f, 64.0f);
     static float level_out = 1.0f;
     static float freq0 = 100.0f;
     static float freq1 = 750.0f;
     static float freq2 = 750.0f;
     static float mode = 1.0f;
-    static float limit = 1.0f;
+    static float limit = db2lin(-6.0f);
     static float attack = 4.0f;
     static float release = 30.0f;
     static float minrel = 0.0f;
@@ -48,7 +52,7 @@ void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *
     static float asc = 1.0f;
     static float asc_coeff = 0.5f;
     static float oversampling = 1.0f;
-    static float auto_level = 1.0f;
+    static float auto_level = 0.0f; // non-default
 
     dsc->connect_port(lv2_handle, 0, in_l);
     dsc->connect_port(lv2_handle, 1, in_r);
