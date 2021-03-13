@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #ifndef LINE_MAX
 #define LINE_MAX 1024
@@ -18,11 +19,11 @@ const char *plugin_path = "/usr/lib/lv2/calf.lv2/calf.so";
 const char *plugin_bundle = "/usr/lib/lv2/calf.lv2/";
 const char *plugin_uri = "http://calf.sourceforge.net/plugins/MultibandLimiter";
 
-void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *in_l, float *in_r, float *out_l, float *out_r) {
+void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *in_l, float *in_r, float *out_l, float *out_r, float input_gain) {
     static float dummy_out;
 
     static float bypass = 0.0f;
-    static float level_in = 4.0f;
+    static float level_in = std::clamp(std::pow(10.0f, input_gain / 20.0f), 1.0f / 64.0f, 64.0f);
     static float level_out = 1.0f;
     static float freq0 = 100.0f;
     static float freq1 = 750.0f;
@@ -115,20 +116,22 @@ void error(const char msg[]) {
 }
 
 void usage() {
-    printf("Usage:\n$ audiomaster <input.wav> <output.flac>\n");
+    printf("Usage:\n$ audiomaster <input_gain_in_db> <input.wav> <output.flac>\n");
     exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 3)
+    if (argc != 4)
         usage();
+
+    float input_gain = std::stof(argv[1]);
     
     // open input file to retrieve information for writing output file
     SF_INFO input_info = {
         .format = 0,
     };
 
-    SNDFILE *input_file = sf_open(argv[1], SFM_READ, &input_info);
+    SNDFILE *input_file = sf_open(argv[2], SFM_READ, &input_info);
     if (input_file == NULL)
         die("sf_open");
 
@@ -144,7 +147,7 @@ int main(int argc, char *argv[]) {
         .format = SF_FORMAT_FLAC | SF_FORMAT_PCM_24,
     };
 
-    SNDFILE *output_file = sf_open(argv[2], SFM_WRITE, &output_info);
+    SNDFILE *output_file = sf_open(argv[3], SFM_WRITE, &output_info);
     if (output_file == NULL)
         die("sf_open");
 
@@ -193,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     dsc->activate(lv2_handle);
 
-    plugin_init_ports(dsc, lv2_handle, lv2_buf_in_left.data(), lv2_buf_in_right.data(), lv2_buf_out_left.data(), lv2_buf_out_right.data());
+    plugin_init_ports(dsc, lv2_handle, lv2_buf_in_left.data(), lv2_buf_in_right.data(), lv2_buf_out_left.data(), lv2_buf_out_right.data(), input_gain);
     
     // "warmup" plugin (workaround pop sounds in calf multiband limiter)
 
@@ -236,7 +239,4 @@ int main(int argc, char *argv[]) {
 
     if (sf_close(input_file))
         die("sf_close");
-
-    printf("Done, no errors!\n");
-    return 0;
 }
