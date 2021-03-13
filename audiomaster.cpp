@@ -102,6 +102,8 @@ void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *
     dsc->connect_port(lv2_handle, 49, NULL);
 }
 
+/* Main Program below */
+
 void die(const char msg[]) {
     perror(msg);
     exit(EXIT_FAILURE);
