@@ -33,7 +33,7 @@ void plugin_init_ports(const LV2_Descriptor *dsc, LV2_Handle lv2_handle, float *
     static float freq1 = 750.0f;
     static float freq2 = 750.0f;
     static float mode = 1.0f;
-    static float limit = db2lin(-6.0f);
+    static float limit = db2lin(-0.3f);
     static float attack = 4.0f;
     static float release = 30.0f;
     static float minrel = 0.0f;
