@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     SF_INFO output_info = {
         .samplerate = samplerate,
         .channels = channels,
-        .format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16,
+        .format = SF_FORMAT_WAV | SF_FORMAT_FLOAT,
     };
 
     SNDFILE *output_file = sf_open(argv[3], SFM_WRITE, &output_info);
